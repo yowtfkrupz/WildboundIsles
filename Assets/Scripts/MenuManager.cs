@@ -8,7 +8,8 @@ public class MenuManager : MonoBehaviour
     public TMP_InputField seedInputField;  
     public Button playButton;              
     public Button settingsButton;         
-    public Button quitButton;              
+    public Button quitButton;
+    public Button MenuButton;
 
     void Start()
     {
@@ -45,7 +46,6 @@ public class MenuManager : MonoBehaviour
     {
         Debug.Log("Otevøeno nastavení (zatím bez funkce)");
     }
-
     void OnQuitButtonClicked()
     {
         Debug.Log("Hra je ukonèena");

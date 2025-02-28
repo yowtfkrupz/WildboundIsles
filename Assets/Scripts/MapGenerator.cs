@@ -1,20 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using TMPro;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class MapGenerator : MonoBehaviour
 {
-
-    [Header("Map Generation")]
-    [SerializeField] private GameObject meshObject;  // Objekt obsahující mesh pro generování
-    public Texture2D spawnTexture;
-
-    [Header("Data")]
-    public TerrainData terrainData;
-    public NoiseData noiseData;
-    public TextureData textureData;
-    public Material terrainMaterial;
+    [Header("Objects")]
+    public GameObject[] natureObjects;  // Přírodní objekty (stromy, rudy)
+    public GameObject[] otherObjects;   // Ostatní objekty (obelisky, bedny)
+    public float natureObjectChance = 0.8f;  // Pravděpodobnost generování přírodních objektů
+    public float otherObjectChance = 0.05f;  // Pravděpodobnost generování jiných objektů
 
     [Header("Player")]
     [SerializeField] private Transform playerTransform;  // Transform hráče, který bude spawnovat objekty v jeho okolí
@@ -22,30 +16,30 @@ public class MapGenerator : MonoBehaviour
     [Header("Stone")]
     [SerializeField] private GameObject stonePrefab;  // Prefab kamene, který chceme spawnovat
     [SerializeField] private float stoneSpawnRadius = 10f;  // Radius pro spawn kamene kolem hráče
-   
-    [Header("Shipwrecks")]
-    public GameObject[] shipwreckPrefabs;  // Prefaby vraků lodí
-    public int shipwreckCount = 10;  // Počet vraků k vygenerování
-        
-    [Header("Objects")]
-    public GameObject[] natureObjects;  // Přírodní objekty (stromy, rudy)
-    public GameObject[] otherObjects;   // Ostatní objekty (obelisky, bedny)
-    public float natureObjectChance = 0.8f;  // Pravděpodobnost generování přírodních objektů
-    public float otherObjectChance = 0.05f;  // Pravděpodobnost generování jiných objektů
 
-    [Header("LOD preview")]
+    [Header("Map Generation")]
+    [SerializeField] private GameObject meshObject;  // Objekt obsahující mesh pro generování
+    private GameObject resourcesContainer;
+
+    public TerrainData terrainData;
+    public NoiseData noiseData;
+    public TextureData textureData;
+    public Material terrainMaterial;
+
     [Range(0, 6)]
     public int editorPreviewLOD;
 
-    private GameObject resourcesContainer;  // Kontejner pro všechny vygenerované objekty
+    public Texture2D spawnTexture;
+    public float spawnProbabilityThreshold = 0.3f; // Sníženo pro rozptýlené shluky
+    public float clusteringFactor = 0.15f; // Pravděpodobnost, že objekt bude vytvořen blízko jiného
 
     public bool autoUpdate;
     private float[,] falloffMap;
 
     void Start()
     {
-
-        GenerateObjects(this);
+        DrawMapInEditor();
+        GenerateObjects();
     }
 
     public int mapChunkSize
@@ -53,6 +47,12 @@ public class MapGenerator : MonoBehaviour
         get { return terrainData.useFlatShading ? 95 : 239; }
     }
 
+    public void DrawMapInEditor()
+    {
+        MapData mapData = GenerateMapData(Vector2.zero);
+        MapDisplay display = FindObjectOfType<MapDisplay>();
+        display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, terrainData.meshHeightMultiplier, terrainData.meshHeightCurve, editorPreviewLOD, terrainData.useFlatShading));
+    }
 
     public MapData GenerateMapData(Vector2 centre)
     {
@@ -74,7 +74,7 @@ public class MapGenerator : MonoBehaviour
         return new MapData(noiseMap);
     }
 
-    public void GenerateObjects(MapGenerator mapGenerator)
+    public void GenerateObjects()
     {
         // Vytvoř nový kontejner pro objekty
         if (resourcesContainer != null)
@@ -85,21 +85,25 @@ public class MapGenerator : MonoBehaviour
 
         // Generování objektů (přírodní a jiné objekty)
         GenerateObjectsOnTerrain();
+
+        // Spawn kamene v okolí hráče
         SpawnStoneNearPlayer();
-        GenerateShipwrecks();
+
+        // Přidání MeshCollider a NavMesh pro terén
+        AddMeshColliderToTerrain();
     }
 
     // Generování objektů na základě terénu
     private void GenerateObjectsOnTerrain()
     {
-        float minDistanceForNatureObjects = 2f;
-        float minDistanceForOtherObjects = 20f;
+        float minDistanceForNatureObjects = 5f;
+        float minDistanceForOtherObjects = 15f;
 
         List<Vector3> spawnedPositions = new List<Vector3>();  // Seznam pozic pro již vygenerované objekty
         int natureObjectsSpawned = 0;
         int otherObjectsSpawned = 0;
 
-        int maxObjects = 1600;
+        int maxObjects = 500;
         int maxAttempts = 5000;
 
         for (int attempt = 0; attempt < maxAttempts && (natureObjectsSpawned + otherObjectsSpawned) < maxObjects; attempt++)
@@ -149,66 +153,21 @@ public class MapGenerator : MonoBehaviour
 
         Debug.Log($"Generováno {natureObjectsSpawned} přírodních objektů a {otherObjectsSpawned} jiných objektů.");
     }
-    private void GenerateShipwrecks()
+
+    // Kontrola, zda je pozice dostatečně vzdálená od ostatních
+    private bool IsPositionFarEnough(Vector3 position, List<Vector3> existingPositions, float minDistance)
     {
-        MeshFilter meshFilter = meshObject.GetComponent<MeshFilter>();
-        Mesh mesh = meshFilter.sharedMesh;
-
-        Vector3[] vertices = mesh.vertices;
-        int shipwrecksSpawned = 0;
-
-        // Získání vrstvy vody z TextureData
-        TextureData.Layer waterLayer = GetWaterLayer();
-        if (waterLayer == null)
+        foreach (Vector3 existingPosition in existingPositions)
         {
-            Debug.LogError("Vrstva vody nebyla nalezena!");
-            return;
-        }
-
-        float waterStartHeight = waterLayer.startHeight;
-
-        for (int i = 0; i < vertices.Length && shipwrecksSpawned < shipwreckCount; i++)
-        {
-            // Náhodně vybereme vrchol z meshe
-            int randomIndex = Random.Range(0, vertices.Length);
-            Vector3 localVertex = vertices[randomIndex];
-
-            // Převedeme lokální pozici vrcholu na světovou
-            Vector3 worldPosition = meshObject.transform.TransformPoint(localVertex);
-
-            // Získáme výšku terénu na této pozici
-            float terrainHeight = GetTerrainHeightAtPosition(worldPosition);
-
-            // Normalizovaná výška pro kontrolu vody
-            float normalizedHeight = Mathf.InverseLerp(textureData.savedMinHeight, textureData.savedMaxHeight, terrainHeight);
-
-            // Pokud je výška nad vrstvou vody, spawne se vrak
-            if (normalizedHeight >= waterStartHeight)
+            if (Vector3.Distance(position, existingPosition) < minDistance)
             {
-                GameObject shipwreckPrefab = shipwreckPrefabs[Random.Range(0, shipwreckPrefabs.Length)];
-                GameObject newShipwreck = Instantiate(shipwreckPrefab, new Vector3(worldPosition.x, terrainHeight, worldPosition.z), Quaternion.Euler(0, Random.Range(0f, 360f), 0));
-                newShipwreck.transform.parent = resourcesContainer.transform;
-                shipwrecksSpawned++;
+                return false;  // Příliš blízko jiného objektu
             }
         }
-
-        Debug.Log($"Generováno {shipwrecksSpawned} vraků lodí.");
+        return true;  // Pozice je dostatečně vzdálená
     }
 
-
-    // Získá vrstvu vody z TextureData
-    private TextureData.Layer GetWaterLayer()
-    {
-        foreach (var layer in textureData.layers)
-        {
-            if (layer.texture.name == "Water")  // Textura vody
-            {
-                return layer;
-            }
-        }
-        return null;  // Vrstva vody nebyla nalezena
-    }
-
+    // Spawn kamene poblíž hráče
     private void SpawnStoneNearPlayer()
     {
         if (stonePrefab != null && playerTransform != null)
@@ -229,27 +188,26 @@ public class MapGenerator : MonoBehaviour
             Debug.LogError("Prefab kamene nebo transform hráče není přiřazen v Inspectoru!");
         }
     }
+
+    private void AddMeshColliderToTerrain()
+    {
+        MeshCollider meshCollider = meshObject.GetComponent<MeshCollider>();
+        if (meshCollider == null)
+        {
+            meshCollider = meshObject.AddComponent<MeshCollider>();
+        }
+        meshCollider.sharedMesh = meshObject.GetComponent<MeshFilter>().sharedMesh;
+        Debug.Log("MeshCollider přidán k terénu.");
+    }
+
     private float GetTerrainHeightAtPosition(Vector3 position)
     {
         RaycastHit hit;
         if (Physics.Raycast(position + Vector3.up * 100f, Vector3.down, out hit, Mathf.Infinity))
         {
-            return hit.point.y;  // Vrátíme výšku terénu
+            return hit.point.y;  // Vrátí výšku povrchu, na který narazil raycast
         }
-        return position.y;  // Pokud není terén, vrátíme původní Y hodnotu
-    }
-
-    // Kontrola, zda je pozice dostatečně vzdálená od ostatních
-    private bool IsPositionFarEnough(Vector3 position, List<Vector3> existingPositions, float minDistance)
-    {
-        foreach (Vector3 existingPosition in existingPositions)
-        {
-            if (Vector3.Distance(position, existingPosition) < minDistance)
-            {
-                return false;  // Příliš blízko jiného objektu
-            }
-        }
-        return true;  // Pozice je dostatečně vzdálená
+        return position.y;  // Pokud žádný povrch nebyl zasažen, vrátí původní výšku
     }
 
     void OnValidate()
@@ -275,7 +233,7 @@ public class MapGenerator : MonoBehaviour
     {
         if (!Application.isPlaying)
         {
-            GenerateObjects(this);
+            DrawMapInEditor();
         }
     }
 

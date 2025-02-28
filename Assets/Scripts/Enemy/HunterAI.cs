@@ -2,67 +2,66 @@ using UnityEngine;
 
 public class HunterAI : EnemyAI
 {
-    public GameObject rangedProjectilePrefab;  // Prefab projektilu
-    public Transform shootingPoint;            // Bod, odkud se vystøelí projektil
-    public float projectileSpeed = 10f;        // Rychlost projektilu          // Rozsah útoku
-    public float meleeAttackRange = 2f;        // Rozsah pro melee útok
-    public float meleeDamage = 10f;            // Poškození melee útoku
-    protected new float attackCooldown = 1f;          // Èas mezi útoky
+    [Header("Hunter Settings")]
+    public GameObject projectilePrefab;
+    public Transform projectileSpawnPoint;
+    public float projectileSpeed = 20f;
+    public AudioClip shootSound;
+    public AudioSource audioSource;
 
-    private void Start()
+    protected override void Attack()
     {
-        base.Start();
-        attackRange = 20f;
-    }
-    private new void Update()
-    {
-        base.Update(); // Voláme základní Update() metodu z EnemyAI
-
-        if (Vector3.Distance(transform.position, player.position) <= attackRange)
+        if (Time.time >= lastAttackTime + attackCooldown)
         {
-            // Pokud je hráè v dostateèné vzdálenosti pro ranged útok
-            if (Time.time >= lastAttackTime + attackCooldown)
+            lastAttackTime = Time.time;
+
+            animator.SetTrigger("Attack"); // Spustí animaci útoku
+
+            if (projectilePrefab != null && projectileSpawnPoint != null)
             {
-                lastAttackTime = Time.time;
-                ShootProjectile();
-            }
-        }
+                GameObject projectile = Instantiate(projectilePrefab, projectileSpawnPoint.position, Quaternion.identity);
+                Vector3 direction = (player.position - projectileSpawnPoint.position).normalized;
 
-        // Pokud je hráè blízko pro melee útok
-        if (Vector3.Distance(transform.position, player.position) <= meleeAttackRange)
-        {
-            if (Time.time >= lastAttackTime + attackCooldown)
+                Rigidbody rb = projectile.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    rb.velocity = direction * projectileSpeed;
+                }
+                else
+                {
+                    Debug.LogError("Projectile prefab is missing Rigidbody!");
+                    Destroy(projectile);
+                    return;
+                }
+
+                Collider projectileCollider = projectile.GetComponent<Collider>();
+                if (projectileCollider != null)
+                {
+                    projectileCollider.isTrigger = true;
+                }
+                else
+                {
+                    Debug.LogError("Projectile prefab is missing Collider!");
+                    Destroy(projectile);
+                    return;
+                }
+
+                var behavior = projectile.AddComponent<Gemr>();
+                behavior.damage = this.damage;
+
+                if (audioSource != null && shootSound != null)
+                {
+                    audioSource.PlayOneShot(shootSound);
+                }
+                else
+                {
+                    Debug.LogWarning("AudioSource or ShootSound is not set in HunterAI.");
+                }
+            }
+            else
             {
-                lastAttackTime = Time.time;
-                MeleeAttack();
+                Debug.LogWarning("ProjectilePrefab or ProjectileSpawnPoint is not set in HunterAI.");
             }
-        }
-    }
-
-    private void ShootProjectile()
-    {
-        // Vytvoøíme projektil
-        GameObject projectile = Instantiate(rangedProjectilePrefab, shootingPoint.position, Quaternion.identity);
-
-        // Pohyb projektilu smìrem k hráèi
-        Rigidbody rb = projectile.GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            Vector3 direction = (player.position - shootingPoint.position).normalized; // Spoèítáme smìr
-            rb.velocity = direction * projectileSpeed; // Nastavíme rychlost pohybu
-        }
-    }
-
-    private void MeleeAttack()
-    {
-        // Mùžeš zde pøidat nìjakou animaci nebo efekt útoku
-        Debug.Log("Hunter is melee attacking!");
-
-        // Poškození hráèi, pokud je v dostateèné blízkosti
-        Player playerScript = player.GetComponent<Player>();
-        if (playerScript != null)
-        {
-            playerScript.TakeDamage(meleeDamage);
         }
     }
 }

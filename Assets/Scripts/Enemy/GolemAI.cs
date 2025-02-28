@@ -2,35 +2,46 @@ using UnityEngine;
 
 public class GolemAI : EnemyAI
 {
-    public float areaAttackRadius = 5f; // Polomìr area útoku
-    public float areaAttackDamage = 30f; // Poškození area útoku
-    public float areaAttackCooldown = 10f; // Cooldown area útoku
+    [Header("Golem Settings")]
+    public float meleeDamage = 20f;
+    public float meleeRange = 2f;
+    public float areaAttackDamage = 30f;
+    public float areaAttackRadius = 5f;
+    public float areaAttackCooldown = 10f;
     private float lastAreaAttackTime;
-
-    protected override void Start()
-    {
-        base.Start();
-        lastAreaAttackTime = Time.time - areaAttackCooldown; // Aby mohl útok provést ihned na zaèátku
-    }
 
     protected override void Attack()
     {
-        base.Attack(); // Klasický melee útok
-
-        // Pokud je area útok dostupný, použij jej
-        if (Time.time >= lastAreaAttackTime + areaAttackCooldown)
+        if (Time.time >= lastAttackTime + attackCooldown)
         {
-            PerformAreaAttack();
-            lastAreaAttackTime = Time.time;
+            PerformMeleeAttack();
+            lastAttackTime = Time.time;
+
+            if (Time.time >= lastAreaAttackTime + areaAttackCooldown)
+            {
+                PerformAreaAttack();
+                lastAreaAttackTime = Time.time;
+            }
         }
     }
 
+    private void PerformMeleeAttack()
+    {
+        if (Vector3.Distance(transform.position, player.position) <= meleeRange)
+        {
+            Player playerScript = player.GetComponent<Player>();
+            if (playerScript != null)
+            {
+                playerScript.TakeDamage(meleeDamage);
+                Debug.Log("Golem performed a melee attack!");
+            }
+        }
+    }
 
     private void PerformAreaAttack()
     {
         Debug.Log("Golem used an area attack!");
 
-        // Najdi všechny objekty v radiusu
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, areaAttackRadius);
         foreach (Collider hitCollider in hitColliders)
         {
@@ -48,7 +59,6 @@ public class GolemAI : EnemyAI
 
     private void OnDrawGizmosSelected()
     {
-        // Vizualizace oblasti útoku v editoru Unity
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, areaAttackRadius);
     }

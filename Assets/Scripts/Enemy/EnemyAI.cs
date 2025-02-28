@@ -8,6 +8,7 @@ public class EnemyAI : MonoBehaviour
 {
     public EnemyState currentState;
     protected Transform player;
+    protected Animator animator;
 
     [Header("Enemy Settings")]
     public float maxHealth = 100f;
@@ -25,11 +26,20 @@ public class EnemyAI : MonoBehaviour
     private float wanderTimer = 0f;
     public float wanderInterval = 3f;
 
-    [Header("Enemy Healthbar")]
-    public Image healthBar;
+    [Header("Healthbar")]
+    [SerializeField] public Canvas healthCanvas; // Odkaz na Canvas s healthbarem
+    public Image healthBarImage;
 
-    protected virtual void Start()
+    [Header("Drop")]
+    public GameObject dropPrefab;
+
+    [Header("Boss Settings")]
+    public bool isBoss = false;
+    [SerializeField] public GameObject bossHealthBarUI;
+
+    void Start()
     {
+        animator = GetComponent<Animator>();
         agent = GetComponent<NavMeshAgent>();
         lastAttackTime = Time.time;
         health = maxHealth;
@@ -43,9 +53,29 @@ public class EnemyAI : MonoBehaviour
         {
             Debug.LogError("Player not found! Make sure the player object has the tag 'Player'.");
         }
+
+        // Automatické pøiøazení health baru pro bosse
+        if (isBoss)
+        {
+            string bossName = gameObject.name; // Jméno prefabu nebo instance bosse
+            bossHealthBarUI = GameObject.Find($"{bossName}Bar");
+            if (bossHealthBarUI == null)
+            {
+                Debug.LogError($"HealthBar for boss '{bossName}' not found in the scene!");
+            }
+            else
+            {
+                bossHealthBarUI.SetActive(true);
+            }
+        }
+        else if (healthCanvas != null)
+        {
+            healthCanvas.gameObject.SetActive(true);
+        }
     }
 
-    protected virtual void Update()
+
+    void Update()
     {
         if (player == null) return;
 
@@ -74,16 +104,33 @@ public class EnemyAI : MonoBehaviour
     }
     public void UpdateHealthBar()
     {
-        if (healthBar != null)
+        if (isBoss && bossHealthBarUI != null)
         {
-            healthBar.fillAmount = health / maxHealth;
+            Image bossHealthImage = bossHealthBarUI.GetComponentInChildren<Image>();
+            if (bossHealthImage != null)
+            {
+                bossHealthImage.fillAmount = health / maxHealth;
+            }
+        }
+        else if (healthBarImage != null)
+        {
+            healthBarImage.fillAmount = health / maxHealth;
+        }
+        else
+        {
+            Debug.LogWarning($"HealthBarImage is missing for {gameObject.name}");
         }
     }
 
     public virtual void HurtEnemy(float damage)
     {
+        if (animator != null)
+        {
+            animator.SetTrigger("IsHit"); // Animace po zásahu
+        }
         health -= damage;
         health = Mathf.Clamp(health, 0, maxHealth);
+        UpdateHealthBar();
 
         if (health <= 0)
         {
@@ -93,6 +140,15 @@ public class EnemyAI : MonoBehaviour
 
     protected virtual void DieEnemy()
     {
+        if (dropPrefab != null)
+        {
+            Instantiate(dropPrefab, transform.position, Quaternion.identity);
+        }
+        else
+        {
+            Debug.LogWarning("DropPrefab is not assigned. No drop will spawn.");
+        }
+
         Destroy(gameObject);
     }
 
@@ -101,6 +157,9 @@ public class EnemyAI : MonoBehaviour
         if (Time.time >= lastAttackTime + attackCooldown)
         {
             lastAttackTime = Time.time;
+
+            animator.SetTrigger("Attack");
+
             Player playerScript = player.GetComponent<Player>();
             if (playerScript != null)
             {
@@ -117,6 +176,9 @@ public class EnemyAI : MonoBehaviour
 
     protected void Wander()
     {
+        if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Walk"))
+            animator.SetBool("IsWalking", true);
+
         wanderTimer += Time.deltaTime;
         if (wanderTimer >= wanderInterval || Vector3.Distance(transform.position, wanderTarget) < 1f)
         {
@@ -141,6 +203,9 @@ public class EnemyAI : MonoBehaviour
 
     protected virtual void Chase()
     {
+        if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Run"))
+            animator.SetBool("IsRunning", true);
+
         agent.SetDestination(player.position);
         agent.speed = chaseSpeed;
     }

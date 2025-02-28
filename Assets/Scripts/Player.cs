@@ -59,6 +59,7 @@ public class Player : MonoBehaviour
 
     [Header("UI and Camera")]
     public GameObject UIContainer; // Prázdný objekt obsahující UI
+    public GameObject Deathscreen;
     public GameObject cameraHolder; // CameraHolder obsahující kameru
     public PostProcessProfile deathProfile; // Post-process profil pro efekt smrti
 
@@ -121,6 +122,8 @@ public class Player : MonoBehaviour
         // Získej pozici smrti
         Vector3 deathPosition = transform.position;
 
+        Vector3 lastPlayerPosition = transform.position;
+
         if (cameraHolder != null)
         {
             // Odpoj CameraHolder od hráèe
@@ -129,6 +132,9 @@ public class Player : MonoBehaviour
             // Skryj UI Container
             if (UIContainer != null)
             {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                Deathscreen.SetActive(true);
                 UIContainer.SetActive(false);
             }
             else
@@ -144,7 +150,7 @@ public class Player : MonoBehaviour
             }
 
             // Aktivuj rotaci kamery kolem pozice smrti
-            StartCoroutine(LevitatingCamera(cameraHolder.transform, deathPosition));
+            StartCoroutine(LevitatingCamera(cameraHolder.transform, deathPosition, lastPlayerPosition));
         }
         else
         {
@@ -152,14 +158,13 @@ public class Player : MonoBehaviour
         }
     }
 
-    private IEnumerator LevitatingCamera(Transform cameraTransform, Vector3 center)
+    private IEnumerator LevitatingCamera(Transform cameraTransform, Vector3 center, Vector3 lastPlayerPosition)
     {
         float rotationSpeed = 30f; // Rychlost rotace
         float radius = 5f; // Polomìr kruhu kolem pozice smrti
-        float duration = 5f; // Délka efektu v sekundách
         float elapsed = 0f;
 
-        while (elapsed < duration)
+        while (true) // Nekoneèný loop
         {
             elapsed += Time.deltaTime;
 
@@ -169,13 +174,15 @@ public class Player : MonoBehaviour
             float z = Mathf.Sin(angle * Mathf.Deg2Rad) * radius;
 
             cameraTransform.position = center + new Vector3(x, 2f, z); // Pøidáme výšku
-            cameraTransform.LookAt(center); // Kamera se dívá na pozici smrti
+
+            // Kamera se postupnì otáèí smìrem k poslední pozici hráèe
+            Quaternion targetRotation = Quaternion.LookRotation(lastPlayerPosition - cameraTransform.position);
+            cameraTransform.rotation = Quaternion.Slerp(cameraTransform.rotation, targetRotation, Time.deltaTime * 2f);
 
             yield return null;
         }
-
-        Debug.Log("Konec animace kamery.");
     }
+
 
     private void UpdateHealthBar()
     {
@@ -209,7 +216,8 @@ public class Player : MonoBehaviour
         }
         else
         {
-            staminaAmmount.text = currentStamina.ToString();
+            // Zaokrouhlení staminy pro zobrazení
+            staminaAmmount.text = Mathf.Round(currentStamina).ToString();
             staminaBar.fillAmount = currentStamina / maxStamina;
 
             if (state != MovementState.sprinting && currentStamina < maxStamina)
