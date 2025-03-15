@@ -6,6 +6,8 @@
 - **Procedural World Generation**: Unique islands with resources and biomes like beaches or plains.
 - **Crafting & Survival**: Collect resources, craft items, and stay alive.
 - **Enemies & Boss Fights**: Encounter various enemies and face off against powerful bosses, including The Lich.
+- **Perks**: Unlock various perks from the chests scattered around the island to help you survive.
+- **Day and Night Cycle**: Gather resources and prepare to face the enemies during the night.
 - **Interactive Obelisks**: Activate obelisks to summon challenging bosses.
 
 ## Installation
