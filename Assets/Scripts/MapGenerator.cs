@@ -96,14 +96,14 @@ public class MapGenerator : MonoBehaviour
     // Generování objektů na základě terénu
     private void GenerateObjectsOnTerrain()
     {
-        float minDistanceForNatureObjects = 5f;
-        float minDistanceForOtherObjects = 15f;
+        float minDistanceForNatureObjects = 2f;
+        float minDistanceForOtherObjects = 10f;
 
         List<Vector3> spawnedPositions = new List<Vector3>();  // Seznam pozic pro již vygenerované objekty
         int natureObjectsSpawned = 0;
         int otherObjectsSpawned = 0;
 
-        int maxObjects = 500;
+        int maxObjects = 1000;
         int maxAttempts = 5000;
 
         for (int attempt = 0; attempt < maxAttempts && (natureObjectsSpawned + otherObjectsSpawned) < maxObjects; attempt++)
