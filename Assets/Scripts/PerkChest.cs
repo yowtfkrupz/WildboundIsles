@@ -74,13 +74,11 @@ public class PerkChest : MonoBehaviour
 
     private void SpawnPerk()
     {
-        GameObject perkPrefab = ChoosePerk(); // Vyber náhodný perk
+        GameObject perkPrefab = ChoosePerk(); // Vybere náhodný perk
         if (perkPrefab != null)
         {
             GameObject spawnedPerk = Instantiate(perkPrefab, transform.position + Vector3.up, Quaternion.identity);
-            spawnedPerk.transform.SetParent(transform); // Nastav jako child objekt bedny
-
-            // Pøehrávej zvuk, pokud má perk AudioSource
+            spawnedPerk.transform.SetParent(transform);
             AudioSource perkAudio = spawnedPerk.GetComponent<AudioSource>();
             if (perkAudio != null)
             {
@@ -96,7 +94,7 @@ public class PerkChest : MonoBehaviour
     private GameObject ChoosePerk()
     {
         // Logika pro výbìr perku na základì kvality bedny
-        List<GameObject> chosenPool = commonPerks; // Defaultnì common
+        List<GameObject> chosenPool = commonPerks;
         switch (quality.ToLower())
         {
             case "uncommon":

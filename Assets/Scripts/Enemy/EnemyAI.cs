@@ -21,7 +21,7 @@ public class EnemyAI : MonoBehaviour
     public float attackCooldown;
     public float wanderRadius = 15f;
     public float lastAttackTime;
-    private NavMeshAgent agent;
+    protected NavMeshAgent agent;
     private Vector3 wanderTarget;
     private float wanderTimer = 0f;
     public float wanderInterval = 3f;
@@ -37,7 +37,7 @@ public class EnemyAI : MonoBehaviour
     public bool isBoss = false;
     [SerializeField] public GameObject bossHealthBarUI;
 
-    void Start()
+    protected void Start()
     {
         animator = GetComponent<Animator>();
         agent = GetComponent<NavMeshAgent>();
@@ -75,7 +75,7 @@ public class EnemyAI : MonoBehaviour
     }
 
 
-    void Update()
+    protected void Update()
     {
         if (player == null) return;
 
@@ -168,12 +168,14 @@ public class EnemyAI : MonoBehaviour
             }
         }
     }
-
-    protected virtual void SpecialAbility()
+    protected virtual void Chase()
     {
-        // Special ability logic to be overridden
-    }
+        if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Run"))
+            animator.SetBool("IsRunning", true);
 
+        agent.SetDestination(player.position);
+        agent.speed = chaseSpeed;
+    }
     protected void Wander()
     {
         if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Walk"))
@@ -189,7 +191,10 @@ public class EnemyAI : MonoBehaviour
         agent.SetDestination(wanderTarget);
         agent.speed = wanderSpeed;
     }
-
+    protected virtual void SpecialAbility()
+    {
+        // Special ability logic to be overridden
+    }
     protected void SetNewWanderTarget()
     {
         Vector3 randomDirection = Random.insideUnitSphere * wanderRadius;
@@ -201,12 +206,5 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    protected virtual void Chase()
-    {
-        if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Run"))
-            animator.SetBool("IsRunning", true);
 
-        agent.SetDestination(player.position);
-        agent.speed = chaseSpeed;
-    }
 }

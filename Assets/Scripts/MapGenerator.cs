@@ -96,28 +96,28 @@ public class MapGenerator : MonoBehaviour
     // Generování objektů na základě terénu
     private void GenerateObjectsOnTerrain()
     {
-        float minDistanceForNatureObjects = 2f;
+        float minDistanceForNatureObjects = 1f;
         float minDistanceForOtherObjects = 10f;
 
-        List<Vector3> spawnedPositions = new List<Vector3>();  // Seznam pozic pro již vygenerované objekty
+        List<Vector3> spawnedPositions = new List<Vector3>();
         int natureObjectsSpawned = 0;
         int otherObjectsSpawned = 0;
 
-        int maxObjects = 1000;
+        int maxObjects = 1500;
         int maxAttempts = 5000;
 
         for (int attempt = 0; attempt < maxAttempts && (natureObjectsSpawned + otherObjectsSpawned) < maxObjects; attempt++)
         {
-            // Náhodně vyber vrchol
+            // Náhodně vybere vrchol
             MeshFilter meshFilter = meshObject.GetComponent<MeshFilter>();
             Mesh mesh = meshFilter.sharedMesh;
             int randomIndex = Random.Range(0, mesh.vertices.Length);
             Vector3 worldPosition = meshObject.transform.TransformPoint(mesh.vertices[randomIndex]);
 
-            // Normalizuj výšku podle rozsahu
+            // Normalizuje výšku podle rozsahu
             float normalizedHeight = Mathf.InverseLerp(0f, 100f, worldPosition.y);
 
-            if (normalizedHeight > 0.2f)  // Pokud je výška vhodná
+            if (normalizedHeight > 0.1f)  // Pokud je výška vhodná
             {
                 GameObject objectToSpawn = null;
 
@@ -140,13 +140,12 @@ public class MapGenerator : MonoBehaviour
 
                 if (objectToSpawn != null)
                 {
-                    // Generování náhodné rotace kolem osy Y
-                    float randomYRotation = Random.Range(0f, 360f);  // Náhodná rotace
-                    Quaternion randomRotation = Quaternion.Euler(0f, randomYRotation, 0f);  // Rotace pouze na ose Y
+                    float randomYRotation = Random.Range(0f, 360f);
+                    Quaternion randomRotation = Quaternion.Euler(0f, randomYRotation, 0f);
 
                     GameObject newObj = Instantiate(objectToSpawn, worldPosition, randomRotation);
                     newObj.transform.parent = resourcesContainer.transform;
-                    spawnedPositions.Add(worldPosition);  // Přidáme pozici do seznamu
+                    spawnedPositions.Add(worldPosition);
                 }
             }
         }

@@ -5,11 +5,12 @@ using TMPro;
 
 public class MenuManager : MonoBehaviour
 {
-    public TMP_InputField seedInputField;  
-    public Button playButton;              
-    public Button settingsButton;         
+    public TMP_InputField seedInputField;
+    public Button playButton;
+    public Button settingsButton;
     public Button quitButton;
-    public Button MenuButton;
+
+    public NoiseData noiseData; // Pøidáno pro pøístup k NoiseData
 
     void Start()
     {
@@ -35,10 +36,13 @@ public class MenuManager : MonoBehaviour
             seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
         }
 
-        // Ulož seed do PlayerPrefs
+        // Ulož seed do NoiseData
+        noiseData.seed = seed;
+
+        // Ulož seed do PlayerPrefs (pokud ho chceš uchovat pro další bìh hry)
         PlayerPrefs.SetInt("WorldSeed", seed);
 
-        // Naèti herní scénu (zmìò "GameWorld" na název své scény)
+        // Naèti herní scénu (zmìò "Scene" na název své scény)
         SceneManager.LoadScene("Scene");
     }
 
@@ -46,6 +50,7 @@ public class MenuManager : MonoBehaviour
     {
         Debug.Log("Otevøeno nastavení (zatím bez funkce)");
     }
+
     void OnQuitButtonClicked()
     {
         Debug.Log("Hra je ukonèena");

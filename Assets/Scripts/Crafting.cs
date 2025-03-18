@@ -5,9 +5,15 @@ using UnityEngine;
 public class Crafting : ScriptableObject
 {
     public string RecipeName; // Název receptu
-    public InventoryItemData resultItem;
-    public InventoryItemData[] requiredItems;
-    public int resultAmount;
-    public int[] requiredAmounts;
-}
+    public InventoryItemData resultItem; // Výsledný item
+    public int resultAmount; // Poèet vyrobených kusù
 
+    [System.Serializable]
+    public struct CraftingRequirement
+    {
+        public InventoryItemData requiredItem;
+        public int requiredAmount;
+    }
+
+    public CraftingRequirement[] requiredMaterials; // Seznam surovin pro výrobu
+}

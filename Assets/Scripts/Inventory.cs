@@ -245,22 +245,22 @@ public class Inventory : MonoBehaviour
             rb.GetComponent<Item>().Durability = durability;
         }
     }
-    public int GetItemCountByID(int id)
+    public int GetItemCount(InventoryItemData itemData)
     {
         int totalAmount = 0;
-        List<Slot> allSlots = new List<Slot>();
-        allSlots.AddRange(_hotbarSlots);
+        List<Slot> allSlots = new List<Slot>(_hotbarSlots);
         allSlots.AddRange(_inventorySlots);
 
         foreach (var slot in allSlots)
         {
-            if (slot.Item != null && slot.Item.ID == id)
+            if (slot.Item != null && slot.Item == itemData)
             {
                 totalAmount += slot.Amount;
             }
         }
         return totalAmount;
     }
+
 
     public void DurabilityDamage()
     {

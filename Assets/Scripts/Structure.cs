@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Structure : MonoBehaviour
 {
@@ -7,8 +8,11 @@ public class Structure : MonoBehaviour
     [SerializeField] private GameObject realModelPrefab;
     [SerializeField] private LayerMask placementMask;
     [SerializeField] private Inventory playerInventory;
-    [SerializeField] private int itemID;
+    [SerializeField] private InventoryItemData itemData;
     [SerializeField] private float maxPlacementDistance = 5f;
+
+    [Header("UI Settings")]
+    [SerializeField] private GameObject placementUIText;
 
     private GameObject ghostModel;
     private Transform playerCamera;
@@ -30,6 +34,12 @@ public class Structure : MonoBehaviour
     {
         if (isPlacing)
         {
+            if (playerInventory.GetCurrentSlot().Item == null || playerInventory.GetCurrentSlot().Item != itemData)
+            {
+                CancelPlacing();
+                return;
+            }
+
             UpdateGhostPosition();
             HandleRotation();
             HandlePlacement();
@@ -39,25 +49,30 @@ public class Structure : MonoBehaviour
     public void ActivateGhostMode()
     {
         Debug.Log("ActivateGhostMode called.");
-        if (!isPlacing && playerInventory.GetCurrentSlot().Item != null && playerInventory.GetCurrentSlot().Item.ID == itemID)
+        if (!isPlacing && playerInventory.GetCurrentSlot().Item != null && playerInventory.GetCurrentSlot().Item == itemData)
         {
-            Debug.Log("Item matches itemID, starting ghost mode...");
+            Debug.Log("Item matches itemData, starting ghost mode...");
             StartPlacing();
         }
         else
         {
-            Debug.LogWarning("Cannot activate ghost mode. Either item is missing or does not match itemID.");
+            Debug.LogWarning("Cannot activate ghost mode. Either item is missing or does not match itemData.");
         }
     }
 
     public void StartPlacing()
     {
-        if (playerInventory.GetItemCountByID(itemID) > 0)
+        if (playerInventory.GetItemCount(itemData) > 0)
         {
             isPlacing = true;
             ghostModel = Instantiate(ghostModelPrefab);
             ghostModel.GetComponent<Collider>().enabled = false;
             Debug.Log("Ghost model created at: " + ghostModel.transform.position);
+
+            if (placementUIText != null)
+            {
+                placementUIText.SetActive(true);
+            }
         }
         else
         {
@@ -110,7 +125,7 @@ public class Structure : MonoBehaviour
             Instantiate(realModelPrefab, ghostModel.transform.position, ghostModel.transform.rotation);
             Debug.Log("Structure placed!");
 
-            if (playerInventory.RemoveItemByID(itemID, 1))
+            if (playerInventory.RemoveItemByID(itemData.ID, 1))
             {
                 CancelPlacing();
             }
@@ -131,6 +146,11 @@ public class Structure : MonoBehaviour
         if (ghostModel != null)
         {
             Destroy(ghostModel);
+        }
+
+        if (placementUIText != null)
+        {
+            placementUIText.SetActive(false);
         }
     }
 

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GolemAI : EnemyAI
 {
@@ -9,6 +10,35 @@ public class GolemAI : EnemyAI
     public float areaAttackRadius = 5f;
     public float areaAttackCooldown = 10f;
     private float lastAreaAttackTime;
+
+    [Header("Golem Animations")]
+    public List<string> meleeAttackTriggers = new List<string> { "Attack1", "Attack2" }; // Seznam triggerù pro melee útok
+
+    new void Update()
+    {
+        base.Update();
+
+        float speed = agent.velocity.magnitude;
+
+        // Pokud je ve Wander stavu a pohybuje se, zapnout Walk
+        if (currentState == EnemyState.Wander && speed > 0.1f)
+        {
+            animator.SetBool("Walk", true);
+            animator.SetBool("Run", false);
+        }
+        // Pokud je ve Chase stavu a pohybuje se, zapnout Run
+        else if (currentState == EnemyState.Chase && speed > 0.1f)
+        {
+            animator.SetBool("Run", true);
+            animator.SetBool("Walk", false);
+        }
+        // Pokud se nepohybuje nebo je v jiném stavu, pøejít do Idle
+        else
+        {
+            animator.SetBool("Walk", false);
+            animator.SetBool("Run", false);
+        }
+    }
 
     protected override void Attack()
     {
@@ -29,17 +59,22 @@ public class GolemAI : EnemyAI
     {
         if (Vector3.Distance(transform.position, player.position) <= meleeRange)
         {
+            // Vybereme náhodnì jednu z animací útoku
+            string attackTrigger = meleeAttackTriggers[Random.Range(0, meleeAttackTriggers.Count)];
+            animator.SetTrigger(attackTrigger);
+
             Player playerScript = player.GetComponent<Player>();
             if (playerScript != null)
             {
                 playerScript.TakeDamage(meleeDamage);
-                Debug.Log("Golem performed a melee attack!");
+                Debug.Log($"Golem used melee attack ({attackTrigger})!");
             }
         }
     }
 
     private void PerformAreaAttack()
     {
+        animator.SetTrigger("AreaAttack");
         Debug.Log("Golem used an area attack!");
 
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, areaAttackRadius);
@@ -55,6 +90,12 @@ public class GolemAI : EnemyAI
                 }
             }
         }
+    }
+
+    public override void HurtEnemy(float damage)
+    {
+        base.HurtEnemy(damage);
+        animator.SetTrigger("Hit"); // Spustí animaci zásahu
     }
 
     private void OnDrawGizmosSelected()
