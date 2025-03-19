@@ -7,7 +7,7 @@ public class Item : MonoBehaviour
     public InventoryItemData MyItem;
     public int Amount;
     public int Durability;
-    Animator _anim;
+    public Animator _anim;
 
     void Awake()
     {

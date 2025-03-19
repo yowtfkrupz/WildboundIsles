@@ -133,6 +133,7 @@ public class Inventory : MonoBehaviour
                 {
                     AddItem(hit.transform.GetComponent<Item>().MyItem, hit.transform.GetComponent<Item>().Amount, hit.transform.GetComponent<Item>().Durability);
                     hit.transform.GetComponent<Item>().PlayDestroyAnim();
+                    hit.transform.GetComponent<Item>()._anim.enabled = true;
                 }
             }
         }
@@ -243,6 +244,7 @@ public class Inventory : MonoBehaviour
             Rigidbody rb = Instantiate(item.Prefab, _throwPoint.position, _throwPoint.rotation).GetComponent<Rigidbody>();
             rb.AddForce(_throwPoint.forward * _throwForce * i, ForceMode.Impulse);
             rb.GetComponent<Item>().Durability = durability;
+            rb.GetComponent<Item>()._anim.enabled = false;
         }
     }
     public int GetItemCount(InventoryItemData itemData)

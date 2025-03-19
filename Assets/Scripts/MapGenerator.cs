@@ -40,6 +40,7 @@ public class MapGenerator : MonoBehaviour
     {
         DrawMapInEditor();
         GenerateObjects();
+        textureData.ApplyToMaterial(terrainMaterial);
     }
 
     public int mapChunkSize
