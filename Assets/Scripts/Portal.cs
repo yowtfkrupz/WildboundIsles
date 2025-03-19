@@ -1,21 +1,26 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class Portal : MonoBehaviour
 {
-    [SerializeField] private List<InventoryItemData> requiredBossItems; // Seznam požadovaných itemù
-    [SerializeField] private List<GameObject> bossItemObjects; // Odpovídající objekty na portálu
-    [SerializeField] private GameObject portalEffect; // Efekt/èásti portálu, které se aktivují po dokonèení
-    private HashSet<int> placedItems = new HashSet<int>(); // Sledování již umístìných itemù
+    [SerializeField] private List<InventoryItemData> requiredBossItems;
+    [SerializeField] private List<GameObject> bossItemObjects;
+    [SerializeField] private GameObject portalEffect;
+    [SerializeField] private GameObject winScreenUI;
 
+    private HashSet<int> placedItems = new HashSet<int>();
     private Inventory playerInventory;
+    private bool portalActivated = false;
 
     void Start()
     {
-        playerInventory = FindObjectOfType<Inventory>(); // Najde hráèùv inventáø
-        portalEffect.SetActive(false); // Portál je na zaèátku neaktivní
+        playerInventory = FindObjectOfType<Inventory>();
 
-        // Skryjeme objekty boss itemù na portálu
+        portalEffect.SetActive(false);
+        winScreenUI.SetActive(false);
+
         foreach (var obj in bossItemObjects)
         {
             obj.SetActive(false);
@@ -37,15 +42,14 @@ public class Portal : MonoBehaviour
 
         InventoryItemData heldItem = currentSlot.Item;
 
-        // Ovìøíme, zda hráè drží nìkterý z požadovaných boss itemù
         for (int i = 0; i < requiredBossItems.Count; i++)
         {
             if (heldItem == requiredBossItems[i] && !placedItems.Contains(heldItem.ID))
             {
                 if (playerInventory.RemoveItemByID(heldItem.ID, 1))
                 {
-                    bossItemObjects[i].SetActive(true); // Aktivujeme odpovídající objekt na portálu
-                    placedItems.Add(heldItem.ID); // Pøidáme item do seznamu umístìných itemù
+                    bossItemObjects[i].SetActive(true);
+                    placedItems.Add(heldItem.ID);
                     CheckPortalCompletion();
                 }
                 return;
@@ -57,8 +61,27 @@ public class Portal : MonoBehaviour
     {
         if (placedItems.Count == requiredBossItems.Count)
         {
-            portalEffect.SetActive(true); // Aktivace portálu po vložení všech itemù
-            Debug.Log("Portál aktivován!");
+            portalEffect.SetActive(true);
+            portalActivated = true;
+            Debug.Log("PortÃ¡l aktivovÃ¡n!");
+            ShowWinScreen();
         }
+    }
+
+    void ShowWinScreen()
+    {
+        winScreenUI.SetActive(true);
+        Time.timeScale = 0f;
+    }
+
+    public void ReturnToMenu()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Menu");
+    }
+
+    public void QuitGame()
+    {
+        Application.Quit();
     }
 }

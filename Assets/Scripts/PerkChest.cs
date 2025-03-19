@@ -68,13 +68,12 @@ public class PerkChest : MonoBehaviour
         {
             animator.SetTrigger("OpenChest");
         }
-        // Spawn perku
         SpawnPerk();
     }
 
     private void SpawnPerk()
     {
-        GameObject perkPrefab = ChoosePerk(); // Vybere náhodný perk
+        GameObject perkPrefab = ChoosePerk();
         if (perkPrefab != null)
         {
             GameObject spawnedPerk = Instantiate(perkPrefab, transform.position + Vector3.up, Quaternion.identity);
@@ -93,7 +92,6 @@ public class PerkChest : MonoBehaviour
 
     private GameObject ChoosePerk()
     {
-        // Logika pro výbìr perku na základì kvality bedny
         List<GameObject> chosenPool = commonPerks;
         switch (quality.ToLower())
         {

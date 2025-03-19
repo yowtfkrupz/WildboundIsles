@@ -5,18 +5,18 @@ using System.Collections.Generic;
 public class HunterAI : EnemyAI
 {
     [Header("Hunter Sounds")]
-    public List<AudioClip> idleSounds; // Seznam náhodných idle zvuků
-    public List<AudioClip> chaseSounds; // Seznam zvuků při přechodu do Chase
-    public List<AudioClip> attackSounds; // Seznam zvuků při útoku
-    public AudioClip hitSound; // Zvuk při zásahu
-    public AudioSource audioSource; // Audio komponenta pro přehrávání
+    public List<AudioClip> idleSounds;
+    public List<AudioClip> chaseSounds;
+    public List<AudioClip> attackSounds;
+    public AudioClip hitSound;
+    public AudioSource audioSource;
 
-    private bool playedChaseSound = false; // Kontrola, zda už chase zvuk hrál
+    private bool playedChaseSound = false;
 
     new void Start()
     {
         base.Start();
-        StartCoroutine(PlayIdleSounds()); // Spustíme smyčku pro idle zvuky
+        StartCoroutine(PlayIdleSounds());
     }
 
     new void Update()
@@ -24,14 +24,11 @@ public class HunterAI : EnemyAI
         base.Update();
 
         float speed = agent.velocity.magnitude;
-
-        // Walk animace loopuje, dokud se nezmění stav na něco jiného
         if (currentState == EnemyState.Wander)
         {
             animator.SetBool("Walk", speed > 0.1f);
             animator.SetBool("Run", false);
         }
-        // Run animace loopuje, dokud se nezmění stav na něco jiného
         else if (currentState == EnemyState.Chase)
         {
             animator.SetBool("Run", speed > 0.1f);
@@ -41,16 +38,14 @@ public class HunterAI : EnemyAI
             {
                 AudioClip chaseClip = chaseSounds[Random.Range(0, chaseSounds.Count)];
                 audioSource.PlayOneShot(chaseClip);
-                playedChaseSound = true; // Chase zvuk přehrajeme jen jednou
+                playedChaseSound = true;
             }
         }
-        else // Pokud je jiný stav (Attack, Hit), vypnout Walk i Run
+        else
         {
             animator.SetBool("Walk", false);
             animator.SetBool("Run", false);
         }
-
-        // Resetování chase zvuku, pokud Hunter přestane pronásledovat hráče
         if (currentState != EnemyState.Chase)
         {
             playedChaseSound = false;
@@ -63,7 +58,6 @@ public class HunterAI : EnemyAI
         {
             lastAttackTime = Time.time;
 
-            // Resetujeme trigger, aby se animace mohla znovu spustit
             animator.ResetTrigger("Attack");
             animator.SetTrigger("Attack");
 
@@ -73,7 +67,6 @@ public class HunterAI : EnemyAI
                 audioSource.PlayOneShot(attackClip);
             }
 
-            // ✅ Udělení damage hráči
             if (Vector3.Distance(transform.position, player.position) <= attackRange)
             {
                 Player playerScript = player.GetComponent<Player>();
@@ -90,7 +83,6 @@ public class HunterAI : EnemyAI
     {
         base.HurtEnemy(damage);
 
-        // Resetujeme trigger, aby se Hit animace mohla spustit vícekrát
         animator.ResetTrigger("Hit");
         animator.SetTrigger("Hit");
 
@@ -104,9 +96,9 @@ public class HunterAI : EnemyAI
     {
         while (true)
         {
-            yield return new WaitForSeconds(Random.Range(4f, 8f)); // Náhodná prodleva mezi 4–8 sekundami
+            yield return new WaitForSeconds(Random.Range(4f, 8f));
 
-            if (idleSounds.Count > 0 && currentState == EnemyState.Wander) // Pouze pokud je ve Wander
+            if (idleSounds.Count > 0 && currentState == EnemyState.Wander)
             {
                 AudioClip clip = idleSounds[Random.Range(0, idleSounds.Count)];
                 if (clip != null)

@@ -3,16 +3,13 @@ using UnityEngine;
 
 public class CraftingManager : MonoBehaviour
 {
-    [SerializeField] private Inventory _inventory; // Odkaz na inventáø
-    [SerializeField] private List<Crafting> _craftingRecipes; // Seznam všech receptù
+    [SerializeField] private Inventory _inventory;
+    [SerializeField] private List<Crafting> _craftingRecipes;
 
-    // Metoda pro kontrolu, zda lze daný recept vyrobit
     public bool CanCraft(Crafting recipe)
     {
         return HasRequiredItems(recipe);
     }
-
-    // Metoda pro pokus o vytvoøení pøedmìtu podle receptu
     public bool TryCraft(Crafting recipe)
     {
         if (!HasRequiredItems(recipe))
@@ -27,8 +24,6 @@ public class CraftingManager : MonoBehaviour
         Debug.Log($"Vytvoøil jsi: {recipe.resultItem.Name} x{recipe.resultAmount}");
         return true;
     }
-
-    // Ovìøí, zda hráè má správný druh i množství všech požadovaných surovin
     private bool HasRequiredItems(Crafting recipe)
     {
         foreach (var requirement in recipe.requiredMaterials)
@@ -42,8 +37,6 @@ public class CraftingManager : MonoBehaviour
         }
         return true;
     }
-
-    // Odebírá pouze správné druhy surovin ve správném množství
     private void RemoveRequiredItems(Crafting recipe)
     {
         foreach (var requirement in recipe.requiredMaterials)

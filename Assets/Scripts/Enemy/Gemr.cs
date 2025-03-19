@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class Gemr : MonoBehaviour
 {
-    public float damage; // Poškození projektilu
-    public Collider hunterCollider; // Hunterùv collider, který chceme ignorovat
+    public float damage;
+    public Collider hunterCollider;
 
     private void Start()
     {

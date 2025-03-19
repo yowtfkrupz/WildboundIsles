@@ -1,24 +1,27 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.AI.Navigation;
+using UnityEngine.AI;
 
 public class MapGenerator : MonoBehaviour
 {
     [Header("Objects")]
-    public GameObject[] natureObjects;  // Přírodní objekty (stromy, rudy)
-    public GameObject[] otherObjects;   // Ostatní objekty (obelisky, bedny)
-    public float natureObjectChance = 0.8f;  // Pravděpodobnost generování přírodních objektů
-    public float otherObjectChance = 0.05f;  // Pravděpodobnost generování jiných objektů
+    public GameObject[] natureObjects;
+    public GameObject[] otherObjects;
+    public GameObject portalObject;
+    public float natureObjectChance = 0.8f;
+    public float otherObjectChance = 0.05f;
 
     [Header("Player")]
-    [SerializeField] private Transform playerTransform;  // Transform hráče, který bude spawnovat objekty v jeho okolí
+    [SerializeField] private Transform playerTransform;
 
     [Header("Stone")]
-    [SerializeField] private GameObject stonePrefab;  // Prefab kamene, který chceme spawnovat
-    [SerializeField] private float stoneSpawnRadius = 10f;  // Radius pro spawn kamene kolem hráče
+    [SerializeField] private GameObject stonePrefab;
+    [SerializeField] private float stoneSpawnRadius = 10f;
 
     [Header("Map Generation")]
-    [SerializeField] private GameObject meshObject;  // Objekt obsahující mesh pro generování
+    [SerializeField] private GameObject meshObject;
     private GameObject resourcesContainer;
 
     public TerrainData terrainData;
@@ -29,9 +32,11 @@ public class MapGenerator : MonoBehaviour
     [Range(0, 6)]
     public int editorPreviewLOD;
 
+    private NavMeshSurface navMeshSurface;
+
     public Texture2D spawnTexture;
-    public float spawnProbabilityThreshold = 0.3f; // Sníženo pro rozptýlené shluky
-    public float clusteringFactor = 0.15f; // Pravděpodobnost, že objekt bude vytvořen blízko jiného
+    public float spawnProbabilityThreshold = 0.3f;
+    public float clusteringFactor = 0.15f;
 
     public bool autoUpdate;
     private float[,] falloffMap;
@@ -41,13 +46,42 @@ public class MapGenerator : MonoBehaviour
         DrawMapInEditor();
         GenerateObjects();
         textureData.ApplyToMaterial(terrainMaterial);
+
+        UpdateMeshCollider();
+        GenerateNavMesh();
     }
 
     public int mapChunkSize
     {
         get { return terrainData.useFlatShading ? 95 : 239; }
     }
+    private void UpdateMeshCollider()
+    {
 
+        MeshCollider existingCollider = meshObject.GetComponent<MeshCollider>();
+        if (existingCollider != null)
+        {
+            Destroy(existingCollider);
+        }
+
+        MeshCollider newCollider = meshObject.AddComponent<MeshCollider>();
+        newCollider.sharedMesh = meshObject.GetComponent<MeshFilter>().sharedMesh;
+
+        Debug.Log("MeshCollider aktualizován.");
+    }
+    private void GenerateNavMesh()
+    {
+        navMeshSurface = meshObject.GetComponent<NavMeshSurface>();
+        if (navMeshSurface == null)
+        {
+            navMeshSurface = meshObject.AddComponent<NavMeshSurface>();
+        }
+
+        navMeshSurface.collectObjects = CollectObjects.Children;
+        navMeshSurface.useGeometry = NavMeshCollectGeometry.RenderMeshes;
+        navMeshSurface.BuildNavMesh();
+        Debug.Log("NavMesh vygenerován.");
+    }
     public void DrawMapInEditor()
     {
         MapData mapData = GenerateMapData(Vector2.zero);
@@ -77,52 +111,53 @@ public class MapGenerator : MonoBehaviour
 
     public void GenerateObjects()
     {
-        // Vytvoř nový kontejner pro objekty
         if (resourcesContainer != null)
         {
-            DestroyImmediate(resourcesContainer);  // Zničení starého kontejneru
+            DestroyImmediate(resourcesContainer);
         }
         resourcesContainer = new GameObject("ResourcesContainer");
 
-        // Generování objektů (přírodní a jiné objekty)
+
         GenerateObjectsOnTerrain();
-
-        // Spawn kamene v okolí hráče
         SpawnStoneNearPlayer();
-
-        // Přidání MeshCollider a NavMesh pro terén
         AddMeshColliderToTerrain();
     }
-
-    // Generování objektů na základě terénu
     private void GenerateObjectsOnTerrain()
     {
         float minDistanceForNatureObjects = 1f;
         float minDistanceForOtherObjects = 10f;
-
+        float minDistanceForPortalObject = 20f;
         List<Vector3> spawnedPositions = new List<Vector3>();
         int natureObjectsSpawned = 0;
         int otherObjectsSpawned = 0;
+        bool portalSpawned = false;
 
         int maxObjects = 1500;
         int maxAttempts = 5000;
 
         for (int attempt = 0; attempt < maxAttempts && (natureObjectsSpawned + otherObjectsSpawned) < maxObjects; attempt++)
         {
-            // Náhodně vybere vrchol
             MeshFilter meshFilter = meshObject.GetComponent<MeshFilter>();
             Mesh mesh = meshFilter.sharedMesh;
             int randomIndex = Random.Range(0, mesh.vertices.Length);
             Vector3 worldPosition = meshObject.transform.TransformPoint(mesh.vertices[randomIndex]);
 
-            // Normalizuje výšku podle rozsahu
             float normalizedHeight = Mathf.InverseLerp(0f, 100f, worldPosition.y);
 
-            if (normalizedHeight > 0.1f)  // Pokud je výška vhodná
+            if (normalizedHeight > 0.1f)
             {
                 GameObject objectToSpawn = null;
 
-                if (otherObjectsSpawned < maxObjects && Random.Range(0f, 1f) < otherObjectChance)
+                if (!portalSpawned)
+                {
+                    if (IsPositionFarEnough(worldPosition, spawnedPositions, minDistanceForPortalObject))
+                    {
+                        objectToSpawn = portalObject;
+                        portalSpawned = true;
+                        Debug.Log($"Portál generován na: {worldPosition}");
+                    }
+                }
+                else if (otherObjectsSpawned < maxObjects && Random.Range(0f, 1f) < otherObjectChance)
                 {
                     if (IsPositionFarEnough(worldPosition, spawnedPositions, minDistanceForOtherObjects))
                     {
@@ -153,34 +188,27 @@ public class MapGenerator : MonoBehaviour
 
         Debug.Log($"Generováno {natureObjectsSpawned} přírodních objektů a {otherObjectsSpawned} jiných objektů.");
     }
-
-    // Kontrola, zda je pozice dostatečně vzdálená od ostatních
     private bool IsPositionFarEnough(Vector3 position, List<Vector3> existingPositions, float minDistance)
     {
         foreach (Vector3 existingPosition in existingPositions)
         {
             if (Vector3.Distance(position, existingPosition) < minDistance)
             {
-                return false;  // Příliš blízko jiného objektu
+                return false;
             }
         }
-        return true;  // Pozice je dostatečně vzdálená
+        return true;
     }
-
-    // Spawn kamene poblíž hráče
     private void SpawnStoneNearPlayer()
     {
         if (stonePrefab != null && playerTransform != null)
         {
-            // Náhodná pozice kolem hráče (v okruhu kolem hráče)
             Vector3 randomPosition = playerTransform.position + new Vector3(Random.Range(-stoneSpawnRadius, stoneSpawnRadius), 0f, Random.Range(-stoneSpawnRadius, stoneSpawnRadius));
 
-            // Zajištění, že kámen spawnuje na zemi (správná výška)
-            randomPosition.y = GetTerrainHeightAtPosition(randomPosition);  // Nastaví správnou výšku podle terénu
+            randomPosition.y = GetTerrainHeightAtPosition(randomPosition);
 
-            // Spawnuje kámen
             GameObject stone = Instantiate(stonePrefab, randomPosition, Quaternion.identity);
-            stone.transform.parent = resourcesContainer.transform;  // Nastavení rodiče
+            stone.transform.parent = resourcesContainer.transform;
             Debug.Log($"Kámen spawnuje na pozici: {randomPosition}");
         }
         else
@@ -205,9 +233,9 @@ public class MapGenerator : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(position + Vector3.up * 100f, Vector3.down, out hit, Mathf.Infinity))
         {
-            return hit.point.y;  // Vrátí výšku povrchu, na který narazil raycast
+            return hit.point.y;
         }
-        return position.y;  // Pokud žádný povrch nebyl zasažen, vrátí původní výšku
+        return position.y;
     }
 
     void OnValidate()

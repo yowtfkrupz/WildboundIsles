@@ -3,25 +3,25 @@ using UnityEngine;
 public class Workstation : MonoBehaviour
 {
     [Header("Crafting UI")]
-    [SerializeField] private GameObject craftingUI; // Odkaz na prázdný objekt Crafting (UI)
-    [SerializeField] private PlayerCam playerCam; // Odkaz na skript kamery
-    [SerializeField] private MonoBehaviour playerController; // Skript, který øídí pohyb hráèe
-    [SerializeField] private Animator crosshair; // Odkaz na crosshair animátor
+    [SerializeField] private GameObject craftingUI;
+    [SerializeField] private PlayerCam playerCam;
+    [SerializeField] private MonoBehaviour playerController;
+    [SerializeField] private Animator crosshair;
 
     [Header("Interaction Settings")]
-    [SerializeField] private float interactionDistance = 3f; // Maximální vzdálenost pro interakci
-    [SerializeField] private KeyCode interactKey = KeyCode.E; // Klávesa pro interakci
-    [SerializeField] private LayerMask interactMask; // Vrstva pro interakci
+    [SerializeField] private float interactionDistance = 3f;
+    [SerializeField] private KeyCode interactKey = KeyCode.E;
+    [SerializeField] private LayerMask interactMask;
 
     private Camera playerCamera;
     private bool isCraftingActive = false;
 
     private void Start()
     {
-        playerCamera = Camera.main; // Najde hlavní kameru
+        playerCamera = Camera.main;
         if (craftingUI != null)
         {
-            craftingUI.SetActive(false); // Skrýt UI na zaèátku
+            craftingUI.SetActive(false);
         }
     }
 
@@ -51,20 +51,14 @@ public class Workstation : MonoBehaviour
         if (craftingUI != null)
         {
             craftingUI.SetActive(isCraftingActive);
-
-            // Ovládání kamery a kurzoru
             if (playerCam != null)
             {
                 playerCam.LockMovement(isCraftingActive);
             }
-
-            // Ovládání pohybu hráèe
             if (playerController != null)
             {
                 playerController.enabled = !isCraftingActive;
             }
-
-            // Ovládání crosshairu
             if (crosshair != null)
             {
                 crosshair.SetBool("IsCrafting", isCraftingActive);

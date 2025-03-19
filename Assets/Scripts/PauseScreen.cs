@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class PauseScreen : MonoBehaviour
 {
-    public GameObject pauseMenuUI; // Pøetáhni ruènì do inspektoru!
+    public GameObject pauseMenuUI;
     public Button quitButton;
     public Button menuButton;
 
@@ -19,14 +19,11 @@ public class PauseScreen : MonoBehaviour
             return;
         }
 
-        // Zajistí, že menu je na zaèátku neaktivní
         pauseMenuUI.SetActive(false);
 
-        // Pøiøazení funkcí tlaèítek
         if (quitButton != null) quitButton.onClick.AddListener(OnQuitButtonClicked);
         if (menuButton != null) menuButton.onClick.AddListener(OnMenuButtonClicked);
 
-        // Najdeme hráèe
         player = FindObjectOfType<Player>();
     }
 
@@ -53,13 +50,11 @@ public class PauseScreen : MonoBehaviour
         }
 
         isPaused = true;
-        pauseMenuUI.SetActive(true); // Aktivace menu
-        Time.timeScale = 0f; // Zastavení èasu
+        pauseMenuUI.SetActive(true);
+        Time.timeScale = 0f;
 
-        // Zakáže pohyb hráèe
         if (player != null) player.enabled = false;
 
-        // Zobrazí kurzor
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -75,13 +70,11 @@ public class PauseScreen : MonoBehaviour
         }
 
         isPaused = false;
-        pauseMenuUI.SetActive(false); // Deaktivace menu
-        Time.timeScale = 1f; // Obnovení èasu
+        pauseMenuUI.SetActive(false);
+        Time.timeScale = 1f;
 
-        // Povolení pohybu hráèe
         if (player != null) player.enabled = true;
 
-        // Skryje kurzor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }

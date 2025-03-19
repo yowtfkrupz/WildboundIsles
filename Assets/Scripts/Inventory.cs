@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro; // Pøidáno pro práci s TextMeshPro
+using TMPro;
 
 public class Inventory : MonoBehaviour
 {
@@ -21,19 +21,18 @@ public class Inventory : MonoBehaviour
     [SerializeField] Transform _throwPoint;
     [SerializeField] float _throwForce;
 
-    [Header("Gold")] // Pøidáno
-    [SerializeField] private int gold = 0; // Poèet zlatých mincí
-    [SerializeField] private TextMeshProUGUI goldText; // Odkaz na UI text pro zobrazení zlatých mincí
+    [Header("Gold")]
+    [SerializeField] private int gold = 0;
+    [SerializeField] private TextMeshProUGUI goldText;
 
     int _currentSlot;
 
     void Start()
     {
         UpdateSlots();
-        UpdateGoldUI(); // Pøidáno: Aktualizace UI na zaèátku
+        UpdateGoldUI();
     }
 
-    // Update is called once per frame
     void Update()
     {
         RaycastToItem();
@@ -272,8 +271,6 @@ public class Inventory : MonoBehaviour
             RemoveHandsItem(1);
         }
     }
-
-    // Pøidáno: Pøístup k zlatým mincím
     public int GetGold()
     {
         return gold;
@@ -292,7 +289,7 @@ public class Inventory : MonoBehaviour
         UpdateGoldUI();
     }
 
-    private void UpdateGoldUI() // Pøidáno
+    private void UpdateGoldUI()
     {
         if (goldText != null)
         {

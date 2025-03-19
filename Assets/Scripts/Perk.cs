@@ -3,21 +3,21 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Perk", menuName = "Perks/Perk")]
 public class Perk : ScriptableObject
 {
-    public string perkName;            // Název perku
-    public string description;         // Popis perku
-    public Sprite icon;                // Ikona pro UI
-    public PerkRarity rarity;          // Rarita perku
-    public PerkEffectType effectType;  // Typ efektu perku
+    public string perkName;            
+    public string description;        
+    public Sprite icon;                
+    public PerkRarity rarity;          
+    public PerkEffectType effectType;
 
-    // Specifické parametry pro rùzné efekty
-    public float healthBoost;          // Pro zvýšení maximálního zdraví
-    public float staminaBoost;         // Pro zvýšení maximální staminy
-    public float healthRegen;          // Pro zvýšení regenerace zdraví
-    public float staminaRegen;         // Pro zvýšení regenerace staminy
-    public bool infiniteStamina;       // Pro nekoneènou staminu
-    public float damageBoost;          // Pro zvýšení poškození
-    public float lowHealthThreshold;   // Pro efekty pøi nízkém zdraví (napø. vyšší poškození)
-    public float movementSpeedBoost;   // Pro zvýšení rychlosti pohybu
+
+    public float healthBoost;        
+    public float staminaBoost;        
+    public float healthRegen;          
+    public float staminaRegen;      
+    public bool infiniteStamina;       
+    public float damageBoost;          
+    public float lowHealthThreshold;  
+    public float movementSpeedBoost;
     public float jumpBoost;
     public float lifesteal;
     public float saturationBoost;
@@ -34,14 +34,14 @@ public enum PerkRarity
 
 public enum PerkEffectType
 {
-    HealthBoost,           // Zvýšení zdraví
-    StaminaBoost,          // Zvýšení staminy
-    HealthRegen,           // Zvýšení regenerace zdraví
-    StaminaRegen,          // Zvýšení regenerace staminy
-    InfiniteStamina,       // Nekoneèná stamina
+    HealthBoost,       
+    StaminaBoost,      
+    HealthRegen,          
+    StaminaRegen,          
+    InfiniteStamina,       
     DamageBoost,            
-    DamageBoostOnLowHealth, // Zvýšení poškození pøi nízkém zdraví
-    MovementSpeedBoost,    // Zvýšení rychlosti pohybu
+    DamageBoostOnLowHealth,
+    MovementSpeedBoost,
     JumpBoost,
     Lifesteal,
     saturationBoost

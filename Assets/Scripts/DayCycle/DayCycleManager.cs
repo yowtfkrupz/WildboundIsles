@@ -9,7 +9,7 @@ public class DayCycleManager : MonoBehaviour
     [SerializeField] private DayCyclePreset Preset;
 
     [SerializeField, Range(0, 24)] private float TimeOfDay;
-    [SerializeField, Range(0.1f, 5f)] private float speedMultiplier; // Základní rychlost dne zpomalena
+    [SerializeField, Range(0.1f, 5f)] private float speedMultiplier;
 
     [SerializeField] private float maxIntensity = 1.5f;
     private float baseIntensity = 0f;
@@ -34,7 +34,7 @@ public class DayCycleManager : MonoBehaviour
     private void Start()
     {
         baseIntensity = maxIntensity / 2f;
-        TimeOfDay = 12f; // Start v poledne
+        TimeOfDay = 12f;
     }
 
     private void Update()
@@ -54,7 +54,7 @@ public class DayCycleManager : MonoBehaviour
         if (Application.isPlaying)
         {
             TimeOfDay += Time.deltaTime * speedMultiplier;
-            TimeOfDay %= 24; // Cyklus dne
+            TimeOfDay %= 24;
         }
 
         AdjustLightIntensity();

@@ -5,7 +5,7 @@ public class Obelisk : MonoBehaviour
 {
     public Material glowingRunesMaterial;
     public Material glowingBottomMaterial;
-    public GameObject[] bosses; // Pole bossù
+    public GameObject[] bosses;
     public Transform spawnPosition;
     public GameObject runes;
     public GameObject obeliskBottom;
@@ -89,8 +89,6 @@ public class Obelisk : MonoBehaviour
         {
             textMeshProUGUI.gameObject.SetActive(false);
         }
-
-        // Pøepnutí hudby na hudbu pro vyvolaného bosse
         var musicManager = FindObjectOfType<MusicManager>();
         if (musicManager != null)
         {

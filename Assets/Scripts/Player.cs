@@ -52,20 +52,20 @@ public class Player : MonoBehaviour
     public float currentStamina;
     public float staminaDrainSpeed = 10f;
     public float staminaRegenSpeed = 5f;
-    public float staminaRegenDelay = 3f;  // Delay before stamina regenerates
-    private float staminaRegenTimer; // Timer to track time since sprinting stopped
+    public float staminaRegenDelay = 3f;
+    private float staminaRegenTimer;
     public Image staminaBar;
     public TextMeshProUGUI staminaAmmount;
 
     [Header("UI and Camera")]
-    public GameObject UIContainer; // Prázdný objekt obsahující UI
+    public GameObject UIContainer;
     public GameObject Deathscreen;
-    public GameObject cameraHolder; // CameraHolder obsahující kameru
-    public PostProcessProfile deathProfile; // Post-process profil pro efekt smrti
+    public GameObject cameraHolder;
+    public PostProcessProfile deathProfile;
 
 
     [Header("Infinite Stamina")]
-    public bool hasInfiniteStamina = false; // Zda má hráè nekoneènou staminu
+    public bool hasInfiniteStamina = false;
 
     public Transform orientation;
 
@@ -111,25 +111,21 @@ public class Player : MonoBehaviour
         }
     }
 
-    private bool isDead = false; // Pøidána promìnná pro sledování smrti hráèe
+    private bool isDead = false;
 
     private void Die()
     {
         Debug.Log("Hráè zemøel!");
 
-        isDead = true; // Nastav hráèe jako mrtvého
-
-        // Získej pozici smrti
+        isDead = true;
         Vector3 deathPosition = transform.position;
 
         Vector3 lastPlayerPosition = transform.position;
 
         if (cameraHolder != null)
         {
-            // Odpoj CameraHolder od hráèe
             cameraHolder.transform.parent = null;
 
-            // Skryj UI Container
             if (UIContainer != null)
             {
                 Cursor.lockState = CursorLockMode.None;
@@ -142,14 +138,12 @@ public class Player : MonoBehaviour
                 Debug.LogWarning("UIContainer nebyl pøiøazen v Inspectoru!");
             }
 
-            // Nastav nový post-process profil
             PostProcessVolume volume = cameraHolder.GetComponent<PostProcessVolume>();
             if (volume != null && deathProfile != null)
             {
                 volume.profile = deathProfile;
             }
 
-            // Aktivuj rotaci kamery kolem pozice smrti
             StartCoroutine(LevitatingCamera(cameraHolder.transform, deathPosition, lastPlayerPosition));
         }
         else
@@ -160,22 +154,20 @@ public class Player : MonoBehaviour
 
     private IEnumerator LevitatingCamera(Transform cameraTransform, Vector3 center, Vector3 lastPlayerPosition)
     {
-        float rotationSpeed = 30f; // Rychlost rotace
-        float radius = 5f; // Polomìr kruhu kolem pozice smrti
+        float rotationSpeed = 30f;
+        float radius = 5f;
         float elapsed = 0f;
 
-        while (true) // Nekoneèný loop
+        while (true)
         {
             elapsed += Time.deltaTime;
 
-            // Vypoèti novou pozici kamery na kruhu
             float angle = elapsed * rotationSpeed;
             float x = Mathf.Cos(angle * Mathf.Deg2Rad) * radius;
             float z = Mathf.Sin(angle * Mathf.Deg2Rad) * radius;
 
-            cameraTransform.position = center + new Vector3(x, 2f, z); // Pøidáme výšku
+            cameraTransform.position = center + new Vector3(x, 2f, z);
 
-            // Kamera se postupnì otáèí smìrem k poslední pozici hráèe
             Quaternion targetRotation = Quaternion.LookRotation(lastPlayerPosition - cameraTransform.position);
             cameraTransform.rotation = Quaternion.Slerp(cameraTransform.rotation, targetRotation, Time.deltaTime * 2f);
 
@@ -196,7 +188,7 @@ public class Player : MonoBehaviour
     private void Update()
     {
         if (isDead)
-            return; // Pokud je hráè mrtvý, ignoruj vstupy
+            return;
 
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
@@ -216,7 +208,6 @@ public class Player : MonoBehaviour
         }
         else
         {
-            // Zaokrouhlení staminy pro zobrazení
             staminaAmmount.text = Mathf.Round(currentStamina).ToString();
             staminaBar.fillAmount = currentStamina / maxStamina;
 
@@ -251,7 +242,7 @@ public class Player : MonoBehaviour
     private void MyInput()
     {
         if (isDead)
-            return; // Pokud je hráè mrtvý, ignoruj vstupy
+            return;
 
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
@@ -336,7 +327,7 @@ public class Player : MonoBehaviour
         }
     }
 
-    private bool isRooted = false; // Indikátor, zda je hráè znehybnìn
+    private bool isRooted = false;
 
     public void ApplyRoot(float duration)
     {
@@ -346,10 +337,8 @@ public class Player : MonoBehaviour
         Debug.Log($"Player is rooted for {duration} seconds.");
         isRooted = true;
 
-        // Zastav pohyb
         rb.velocity = Vector3.zero;
 
-        // Zakázat vstup
         StartCoroutine(RootEffect(duration));
     }
 

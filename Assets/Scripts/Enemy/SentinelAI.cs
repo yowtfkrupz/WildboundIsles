@@ -4,31 +4,52 @@ using UnityEngine;
 
 public class SentinelAI : EnemyAI
 {
-    private bool isUnyielding;
+    private bool isHealing = false;
+    private bool hasHealed = false;
 
     protected override void SpecialAbility()
     {
-        Debug.Log("Sentinel used Unyielding Resolve!");
-        isUnyielding = true;
-        Invoke(nameof(EndUnyielding), 5f); // Trvání 5 sekund
+        if (!hasHealed)
+        {
+            hasHealed = true;
+            StartCoroutine(HealSequence());
+        }
     }
 
-    private void EndUnyielding()
+    private IEnumerator HealSequence()
     {
-        isUnyielding = false;
-        Debug.Log("Sentinel ended Unyielding Resolve.");
+        Debug.Log("Sentinel activates Unyielding Resolve!");
+        isHealing = true;
+        agent.isStopped = true;
+        animator.SetTrigger("Heal");
+
+        yield return new WaitForSeconds(3f);
+
+        health += 75f;
+        UpdateHealthBar();
+        Debug.Log("Sentinel has healed!");
+
+        isHealing = false;
+        agent.isStopped = false;
     }
 
     public override void HurtEnemy(float damage)
     {
-        if (!isUnyielding)
+        if (!isHealing)
         {
             base.HurtEnemy(damage);
         }
         else
         {
-            Debug.Log("Sentinel is invincible!");
+            Debug.Log("Sentinel is healing and cannot be harmed!");
+        }
+    }
+
+    protected override void Attack()
+    {
+        if (!isHealing)
+        {
+            base.Attack();
         }
     }
 }
-

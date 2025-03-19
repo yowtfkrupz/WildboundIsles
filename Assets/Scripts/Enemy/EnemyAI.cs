@@ -27,16 +27,11 @@ public class EnemyAI : MonoBehaviour
     public float wanderInterval = 3f;
 
     [Header("Healthbar")]
-    [SerializeField] public Canvas healthCanvas; // Odkaz na Canvas s healthbarem
+    [SerializeField] public Canvas healthCanvas;
     public Image healthBarImage;
 
     [Header("Drop")]
     public GameObject dropPrefab;
-
-    [Header("Boss Settings")]
-    public bool isBoss = false;
-    [SerializeField] public GameObject bossHealthBarUI;
-
     protected void Start()
     {
         animator = GetComponent<Animator>();
@@ -54,21 +49,7 @@ public class EnemyAI : MonoBehaviour
             Debug.LogError("Player not found! Make sure the player object has the tag 'Player'.");
         }
 
-        // Automatické pøiøazení health baru pro bosse
-        if (isBoss)
-        {
-            string bossName = gameObject.name; // Jméno prefabu nebo instance bosse
-            bossHealthBarUI = GameObject.Find($"{bossName}Bar");
-            if (bossHealthBarUI == null)
-            {
-                Debug.LogError($"HealthBar for boss '{bossName}' not found in the scene!");
-            }
-            else
-            {
-                bossHealthBarUI.SetActive(true);
-            }
-        }
-        else if (healthCanvas != null)
+        if (healthCanvas != null)
         {
             healthCanvas.gameObject.SetActive(true);
         }
@@ -104,15 +85,7 @@ public class EnemyAI : MonoBehaviour
     }
     public void UpdateHealthBar()
     {
-        if (isBoss && bossHealthBarUI != null)
-        {
-            Image bossHealthImage = bossHealthBarUI.GetComponentInChildren<Image>();
-            if (bossHealthImage != null)
-            {
-                bossHealthImage.fillAmount = health / maxHealth;
-            }
-        }
-        else if (healthBarImage != null)
+       if (healthBarImage != null)
         {
             healthBarImage.fillAmount = health / maxHealth;
         }
@@ -126,7 +99,7 @@ public class EnemyAI : MonoBehaviour
     {
         if (animator != null)
         {
-            animator.SetTrigger("IsHit"); // Animace po zásahu
+            animator.SetTrigger("IsHit");
         }
         health -= damage;
         health = Mathf.Clamp(health, 0, maxHealth);
@@ -193,7 +166,6 @@ public class EnemyAI : MonoBehaviour
     }
     protected virtual void SpecialAbility()
     {
-        // Special ability logic to be overridden
     }
     protected void SetNewWanderTarget()
     {

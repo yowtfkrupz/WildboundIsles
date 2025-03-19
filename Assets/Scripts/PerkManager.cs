@@ -7,30 +7,30 @@ using UnityEngine.UI;
 public class PerkManager : MonoBehaviour
 {
     [Header("UI Settings")]
-    public GameObject perkPanel; // Panel v UI, kam se pøidávají ikony perkù
-    public GameObject perkIconPrefab; // Prefab pro ikonu perku (prázdný Image prefab)
-    public GameObject tooltip; // Tooltip objekt
-    public TextMeshProUGUI tooltipTitle; // TMP Text pro název
-    public TextMeshProUGUI tooltipDescription; // TMP Text pro popis
+    public GameObject perkPanel;
+    public GameObject perkIconPrefab;
+    public GameObject tooltip;
+    public TextMeshProUGUI tooltipTitle;
+    public TextMeshProUGUI tooltipDescription;
 
-    private List<Perk> activePerks = new List<Perk>(); // Seznam aktivních perkù
-    private Player player; // Odkaz na hráèe
+    private List<Perk> activePerks = new List<Perk>();
+    private Player player;
     private Tool tool;
 
     void Start()
     {
-        player = GetComponent<Player>(); // Získání odkazu na hráèe
-        if (tooltip != null) tooltip.SetActive(false); // Skryj tooltip na zaèátku
+        player = GetComponent<Player>();
+        if (tooltip != null) tooltip.SetActive(false);
     }
 
     public void ApplyPerk(Perk perk)
     {
-        // Pokud hráè tento perk ještì nemá, pøidej ho
+
         if (!activePerks.Contains(perk))
         {
-            activePerks.Add(perk); // Pøidání do seznamu aktivních perkù
-            AddPerkToUI(perk);    // Zobraz perk v UI
-            ApplyPerkEffect(perk); // Aplikuj efekt perku
+            activePerks.Add(perk);
+            AddPerkToUI(perk);
+            ApplyPerkEffect(perk);
             Debug.Log($"Perk {perk.perkName} applied!");
         }
         else
@@ -60,14 +60,11 @@ public class PerkManager : MonoBehaviour
     {
         if (tooltip != null)
         {
-            // Aktivace Tooltipu
             tooltip.SetActive(true);
 
-            // Pøidání offsetu pro pozici (napø. napravo od myši)
-            Vector3 offset = new Vector3(15f, -15f, 0f); // Upravit dle potøeby
+            Vector3 offset = new Vector3(15f, -15f, 0f);
             tooltip.transform.position = position + offset;
 
-            // Aktualizace textu
             tooltipTitle.text = perk.perkName;
             tooltipDescription.text = perk.description;
         }
@@ -84,7 +81,7 @@ public class PerkManager : MonoBehaviour
     private void AddEventTrigger(EventTrigger trigger, EventTriggerType eventType, UnityEngine.Events.UnityAction<BaseEventData> action)
     {
         EventTrigger.Entry entry = new EventTrigger.Entry();
-        entry.eventID = eventType; // Použijeme eventID místo eventType
+        entry.eventID = eventType;
         entry.callback.AddListener(action);
         trigger.triggers.Add(entry);
     }
@@ -110,10 +107,9 @@ public class PerkManager : MonoBehaviour
                 player.jumpForce = player.jumpForce * perk.jumpBoost;
                 break;
             case PerkEffectType.DamageBoost:
-                // Aplikování bonusu na poškození nástroje
                 if (tool != null)
                 {
-                    tool.UpdateToolDamage(perk.damageBoost); // Aplikuj modifikátor poškození
+                    tool.UpdateToolDamage(perk.damageBoost);
                 }
                 break;
             case PerkEffectType.DamageBoostOnLowHealth:
@@ -121,7 +117,7 @@ public class PerkManager : MonoBehaviour
                 {
                     if (tool != null)
                     {
-                        tool.UpdateToolDamage(perk.damageBoost); // Aplikuj modifikátor poškození
+                        tool.UpdateToolDamage(perk.damageBoost);
                     }
                 }
                 break;

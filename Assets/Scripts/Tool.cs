@@ -5,24 +5,22 @@ using UnityEngine;
 public class Tool : MonoBehaviour
 {
     [SerializeField] private Inventory _inventory;
-    [SerializeField] public string toolName;  // Název nástroje
-    [SerializeField] public float damage;      // Poškození nástroje
-    [SerializeField] public int tier;        // Tier nástroje  
-    [SerializeField] private float interactionRange = 3f; // Maximální vzdálenost interakce
-    [SerializeField] private LayerMask resourceLayer; // Vrstva, která obsahuje resource objekty
-    [SerializeField] private GameObject hitEffectPrefab; // Prefab particle systému pro efekt zásahu
+    [SerializeField] public string toolName;  
+    [SerializeField] public float damage;   
+    [SerializeField] public int tier;      
+    [SerializeField] private float interactionRange = 3f;
+    [SerializeField] private LayerMask resourceLayer;
+    [SerializeField] private GameObject hitEffectPrefab;
 
-    // Nové vlastnosti
-    [SerializeField] private bool canMineOre;    // Jestli nástroj může těžit rudy
-    [SerializeField] private bool canChopTree;  // Jestli nástroj může těžit stromy
+    [SerializeField] private bool canMineOre;
+    [SerializeField] private bool canChopTree;
 
     public float lifesteal;
 
-    // Zvuky
-    [SerializeField] private AudioClip stoneHit;  // Zvuk při zásahu rudy
-    [SerializeField] private AudioClip woodHit;   // Zvuk při zásahu stromu
-    [SerializeField] private AudioClip toolSwing; // Zvuk při švihu nástroje
-    private AudioSource audioSource;             // AudioSource komponenta
+    [SerializeField] private AudioClip stoneHit;
+    [SerializeField] private AudioClip woodHit;
+    [SerializeField] private AudioClip toolSwing;
+    private AudioSource audioSource;
 
     private Animator _animator;
 
@@ -42,20 +40,15 @@ public class Tool : MonoBehaviour
 
     void Update()
     {
-        // Spuštění animace a raycastu při levém tlačítku myši
         if (Input.GetMouseButtonDown(0))
         {
-            // Spuštění animace
             _animator.Play("ItemAttack");
 
-            // Vykonání raycastu
             RaycastHit hit;
-            if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, interactionRange, resourceLayer))
+            if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, interactionRange))
             {
-                // Spawn particle efektu na místě zásahu
                 SpawnHitEffect(hit.point, hit.normal);
 
-                // Interakce s resource objekty
                 if (hit.collider.CompareTag("ResourceOre") && canMineOre)
                 {
                     Debug.Log("Ore mined!");
@@ -71,22 +64,22 @@ public class Tool : MonoBehaviour
                     PlaySound(toolSwing);
                 }
 
-                EnemyAI enemy = hit.collider.GetComponent<EnemyAI>();
-                if (enemy != null)
+                if (hit.collider.CompareTag("Enemy"))
                 {
-                    // Poškození nepřítele
-                    enemy.HurtEnemy(damage);
-                    PlaySound(toolSwing);
-                    ApplyLifesteal(lifesteal);
+                    EnemyAI enemy = hit.collider.GetComponent<EnemyAI>();
+                    if (enemy != null)
+                    {
+                        enemy.HurtEnemy(damage);
+                        PlaySound(toolSwing);
+                        ApplyLifesteal(lifesteal);
+                    }
                 }
 
-                // Pokud je to Resource objekt (např. pro kontrolu tieru)
                 Resource resource = hit.collider.GetComponent<Resource>();
                 if (resource != null)
                 {
                     if (tier >= resource.RequiredTier)
                     {
-                        // Těžba suroviny
                         resource.Harvest(resource, damage);
                         _inventory.DurabilityDamage();
                     }
@@ -103,6 +96,7 @@ public class Tool : MonoBehaviour
         }
     }
 
+
     private void SpawnHitEffect(Vector3 position, Vector3 normal)
     {
         if (hitEffectPrefab != null)
@@ -112,26 +106,22 @@ public class Tool : MonoBehaviour
         }
         else
         {
-            // Dočasné vizuální ověření
             GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             sphere.transform.position = position;
-            sphere.transform.localScale = Vector3.one * 0.1f; // Zmenšení
-            Destroy(sphere, 2f); // Sphere zmizí po 2 sekundách
+            sphere.transform.localScale = Vector3.one * 0.1f;
+            Destroy(sphere, 2f);
             Debug.LogWarning("Using test sphere because hitEffectPrefab is not assigned!");
         }
     }
     public void UpdateToolDamage(float damageMultiplier)
     {
-        // Aplikujte modifikátor poškození, například z perků
         damage *= damageMultiplier;
     }
     private void ApplyLifesteal(float lifesteal)
     {
-        // Získání hodnoty lifestealu z perků nebo jiného nastavení
-        float lifestealAmount = damage * lifesteal; // Např. 0.1 pro 10% lifestealu
+        float lifestealAmount = damage * lifesteal;
         player.currentHealth += lifestealAmount;
 
-        // Omezte zdraví, pokud by překročilo maximální limit
         if (player.currentHealth > player.maxHealth)
         {
             player.currentHealth = player.maxHealth;

@@ -17,7 +17,7 @@ public class SmeltingStation : MonoBehaviour
     [SerializeField] private KeyCode interactKey = KeyCode.E;
     [SerializeField] private LayerMask interactMask;
 
-    [Header("UI Slots (UNIKÁTNÍ PRO KAŽDOU PEC)")]
+    [Header("UI Slots")]
     [SerializeField] private Slot inputSlot;
     [SerializeField] private Slot fuelSlot;
     [SerializeField] private Slot outputSlot;
@@ -41,7 +41,7 @@ public class SmeltingStation : MonoBehaviour
     private float currentBurnTime = 0f;
     private const float burnTime = 10f;
     private bool isUIActive = false;
-    private bool playerNearby = false; // Každá pec sleduje, jestli u ní stojí hráè
+    private bool playerNearby = false;
 
     private void Start()
     {
@@ -51,7 +51,7 @@ public class SmeltingStation : MonoBehaviour
         }
 
         fuelSet = new HashSet<InventoryItemData>(fuelItems);
-        if (smeltingEffect != null) smeltingEffect.Stop(); // Efekt vypnutý na zaèátku
+        if (smeltingEffect != null) smeltingEffect.Stop();
     }
 
     private void Update()
@@ -110,7 +110,7 @@ public class SmeltingStation : MonoBehaviour
 
         isSmelting = true;
         currentSmeltTime = 0f;
-        smeltingEffect?.Play(); // Aktivace efektu
+        smeltingEffect?.Play();
     }
 
     private void StartBurning()
@@ -139,7 +139,7 @@ public class SmeltingStation : MonoBehaviour
             else
             {
                 isSmelting = false;
-                smeltingEffect?.Stop(); // Vypnutí efektu, pokud není palivo
+                smeltingEffect?.Stop();
             }
         }
     }
@@ -184,8 +184,6 @@ public class SmeltingStation : MonoBehaviour
         }
         return null;
     }
-
-    // **Oprava více pecí – UI se otevøe jen pro pec, u které hráè stojí**
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
@@ -199,8 +197,6 @@ public class SmeltingStation : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             playerNearby = false;
-
-            // Automaticky zavøeme UI, když hráè odejde
             if (isUIActive)
             {
                 ToggleSmeltingUI();

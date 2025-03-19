@@ -2,35 +2,33 @@ using UnityEngine;
 
 public class PerkPickup : MonoBehaviour
 {
-    public Perk perk; // Odkaz na ScriptableObject perku
+    public Perk perk;
     private bool playerInRange = false;
-    private PerkChest parentChest; // Odkaz na bednu (parent objekt)
+    private PerkChest parentChest;
 
     void Start()
     {
-        // Najdi rodièovskou bednu, pokud existuje
         parentChest = GetComponentInParent<PerkChest>();
     }
 
     void Update()
     {
-        // Pokud je hráè v dosahu a stiskne klávesu E
         if (playerInRange && Input.GetKeyDown(KeyCode.E))
         {
-            PerkManager perkManager = FindObjectOfType<PerkManager>(); // Najdi PerkManager ve scénì
+            PerkManager perkManager = FindObjectOfType<PerkManager>();
             if (perkManager != null && perk != null)
             {
-                perkManager.ApplyPerk(perk); // Aplikuj perk na hráèe
+                perkManager.ApplyPerk(perk);
                 Debug.Log($"Player collected perk: {perk.perkName}");
 
-                Destroy(gameObject); // Zniè objekt perku
+                Destroy(gameObject);
             }
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player")) // Pokud hráè vstoupí do oblasti
+        if (other.CompareTag("Player"))
         {
             playerInRange = true;
         }
@@ -38,7 +36,7 @@ public class PerkPickup : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player")) // Pokud hráè opustí oblast
+        if (other.CompareTag("Player"))
         {
             playerInRange = false;
         }
